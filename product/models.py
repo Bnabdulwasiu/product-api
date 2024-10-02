@@ -1,17 +1,17 @@
 from django.db import models
 
 PRODUCT_CATEGORY = [
-    ("Drugs", "drugs"),
-    ("Cosmetics", "cosmetics"),
-    ("Food", "food"),
-    ("Clothing", "clothing")
+    ("drugs", "Drugs"),
+    ("cosmetics", "Cosmetics"),
+    ("food", "Food"),
+    ("clothing", "Flothing")
 ]
 
 UNIT_CHOICES = [
-    ("Piece", "piece"),
-    ("KG", "kg"),
-    ("Carton", "carton"),
-    ("Bag", "bag")
+    ("piece", "Piece"),
+    ("kg", "KG"),
+    ("carton", "Carton"),
+    ("bag", "Bag")
 ]
 
 # Create your models here.
@@ -22,6 +22,10 @@ class Product(models.Model):
     total_quantity = models.IntegerField()
     cost_price  = models.DecimalField(max_digits=10, decimal_places=2)
     category = models.CharField(max_length=15, choices=PRODUCT_CATEGORY)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-timestamp']
 
     def __str__(self):
         return f"{self.product_name} has been added to the product catalogue"
@@ -33,4 +37,4 @@ class UnitMeasurement(models.Model):
     quantity = models.IntegerField()
 
     def __str__(self):
-        return f"{self.unit_type} of {self.product.product_name} at N{self.selling_price}"
+        return f"{self.unit_type} of {self.product.product_name} at NGN{self.selling_price}"
