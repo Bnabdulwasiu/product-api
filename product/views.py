@@ -3,12 +3,13 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from .models import Product, ProductBatch
+from django.db import transaction
+from .models import Product, ProductBatch, SalesRecord
 from decimal import Decimal
 from .serializers import (ProductSerializer,
                         AddProductQuantitySerializer,
                         RetrieveProductBatchesSerializer,
-                        SellProductSerializer)
+                        SellProductSerializer, SalesRecordSerializer)
 # Create your views here.
 
 
@@ -28,6 +29,14 @@ class ProductBatchesRetrieveView(generics.ListAPIView):
     def get_queryset(self):
         product_id = self.kwargs['pk']
         return ProductBatch.objects.filter(product_id=product_id)
+    
+
+class SalesHistoryView(generics.ListAPIView):
+
+    serializer_class = SalesRecordSerializer
+
+    def get_queryset(self):
+        return SalesRecord.objects.all().order_by('-sale_date')
 
 
 class AddProductQuantityView(APIView):
@@ -60,54 +69,152 @@ class AddProductQuantityView(APIView):
 
 
 class SellProductView(APIView):
-
-     def post(self, request, product_id):
-        product = get_object_or_404(Product, pk=product_id)
-
+    def post(self, request):
         serializer = SellProductSerializer(data=request.data)
+
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-        selling_price = Decimal(request.data.get('selling_price'))
-        quantity_to_sell = int(request.data.get('quantity'))
 
-        # FIFO: Get batches in order of when they were added (oldest first)
-        batches = ProductBatch.objects.filter(product=product).order_by('added_on')
-
+        total_transaction_profit = Decimal(0)
+        total_revenue = Decimal(0)
         total_cost = Decimal(0)
-        total_sold = 0
+        details = []
 
-        for batch in batches:
-            if quantity_to_sell == 0:
-                break
+        with transaction.atomic():
+            for product_sale_data in serializer.validated_data['products']:
+                product_id = product_sale_data['product_id']
+                unit_type = product_sale_data['unit_type']
+                quantity_to_sell = product_sale_data['quantity']
+                selling_price = product_sale_data['selling_price']
 
-            elif batch.quantity <= quantity_to_sell:
-                # If the current batch can be fully sold
-                total_cost += batch.quantity * batch.cost_price
-                quantity_to_sell -= batch.quantity
-                total_sold += batch.quantity
+                product = get_object_or_404(Product, pk=product_id)
 
-                # Delete the batch since it has been sold completely
-                batch.delete()
-            else:
-                # If only part of the batch is sold
-                total_cost += quantity_to_sell * batch.cost_price
-                batch.quantity -= quantity_to_sell
-                batch.save()
+                available_unit_types = product.unit_measurements.values_list('unit_type', flat=True)
+                print(f"Available unit types for product {product.product_name}: {available_unit_types}")
 
-                total_sold += quantity_to_sell
-                quantity_to_sell = 0
+                # Validate the unit measurement for the product
+                unit_measurement = product.unit_measurements.filter(unit_type=unit_type,).first()
+                if not unit_measurement:
+                    return Response({"error": f"Unit type '{unit_type}' is not valid for product {product.product_name}."}, 
+                                    status=status.HTTP_400_BAD_REQUEST)
 
-        if total_sold == 0:
-            return Response({"message": "No products available to sell"}, status=status.HTTP_400_BAD_REQUEST)
+                # FIFO: Get batches in order of when they were added (oldest first)
+                batches = ProductBatch.objects.filter(product=product).order_by('added_on')
 
-        # Calculate total profit
-        total_revenue = total_sold * selling_price
-        profit = total_revenue - total_cost
+                product_total_cost = Decimal(0)
+                total_sold = 0
 
-        return Response({
-            "message": f"{total_sold} units of {product.product_name} sold.",
-            "total_revenue": total_revenue,
-            "total_cost": total_cost,
-            "profit": profit
-        }, status=status.HTTP_200_OK)
+                for batch in batches:
+                    if quantity_to_sell == 0:
+                        break
+
+                    if batch.quantity <= quantity_to_sell:
+                        # If the current batch can be fully sold
+                        product_total_cost += batch.quantity * batch.cost_price
+                        quantity_to_sell -= batch.quantity
+                        total_sold += batch.quantity
+
+                        # Delete the batch since it has been sold completely
+                        batch.delete()
+                    else:
+                        # If only part of the batch is sold
+                        product_total_cost += quantity_to_sell * batch.cost_price
+                        batch.quantity -= quantity_to_sell
+                        batch.save()
+
+                        total_sold += quantity_to_sell
+                        quantity_to_sell = 0
+
+                if total_sold == 0:
+                    return Response({"message": f"No products available to sell for {product.product_name}"},
+                                    status=status.HTTP_400_BAD_REQUEST)
+
+                # Calculate profit for this product sale
+                product_revenue = total_sold * selling_price
+                product_profit = product_revenue - product_total_cost
+
+                SalesRecord.objects.create(
+                    product=product,
+                    unit_type=unit_type,
+                    quantity=total_sold,
+                    revenue=product_revenue,
+                    cost=product_total_cost,
+                    profit=product_profit,
+                )
+
+                total_transaction_profit += product_profit
+                total_revenue += product_revenue
+                total_cost += product_total_cost
+
+                details.append({
+                    "product": product.product_name,
+                    "units_sold": total_sold,
+                    "unit_type": unit_type,
+                    "total_revenue": product_revenue,
+                    "total_cost": product_total_cost,
+                    "profit": product_profit
+                })
+
+            return Response({
+                "message": "Products sold successfully.",
+                "transaction_summary": {
+                    "total_revenue": total_revenue,
+                    "total_cost": total_cost,
+                    "total_profit": total_transaction_profit
+                },
+                "details": details
+            }, status=status.HTTP_200_OK)
+
+
+# class SellProductView(APIView):
+
+#      def post(self, request, product_id):
+#         product = get_object_or_404(Product, pk=product_id)
+
+#         serializer = SellProductSerializer(data=request.data)
+#         if not serializer.is_valid():
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+#         selling_price = Decimal(request.data.get('selling_price'))
+#         quantity_to_sell = int(request.data.get('quantity'))
+
+#         # FIFO: Get batches in order of when they were added (oldest first)
+#         batches = ProductBatch.objects.filter(product=product).order_by('added_on')
+
+#         total_cost = Decimal(0)
+#         total_sold = 0
+
+#         for batch in batches:
+#             if quantity_to_sell == 0:
+#                 break
+
+#             elif batch.quantity <= quantity_to_sell:
+#                 # If the current batch can be fully sold
+#                 total_cost += batch.quantity * batch.cost_price
+#                 quantity_to_sell -= batch.quantity
+#                 total_sold += batch.quantity
+
+#                 # Delete the batch since it has been sold completely
+#                 batch.delete()
+#             else:
+#                 # If only part of the batch is sold
+#                 total_cost += quantity_to_sell * batch.cost_price
+#                 batch.quantity -= quantity_to_sell
+#                 batch.save()
+
+#                 total_sold += quantity_to_sell
+#                 quantity_to_sell = 0
+
+#         if total_sold == 0:
+#             return Response({"message": "No products available to sell"}, status=status.HTTP_400_BAD_REQUEST)
+
+#         # Calculate total profit
+#         total_revenue = total_sold * selling_price
+#         profit = total_revenue - total_cost
+
+#         return Response({
+#             "message": f"{total_sold} units of {product.product_name} sold.",
+#             "total_revenue": total_revenue,
+#             "total_cost": total_cost,
+#             "profit": profit
+#         }, status=status.HTTP_200_OK)

@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Product, UnitMeasurement, ProductBatch
+from .models import (Product, UnitMeasurement,
+                    ProductBatch, SalesRecord)
 
 class UnitMeasurementSerializer(serializers.ModelSerializer):
 
@@ -9,13 +10,27 @@ class UnitMeasurementSerializer(serializers.ModelSerializer):
 
 
 class AddProductQuantitySerializer(serializers.Serializer):
-    cost_price = serializers.DecimalField(max_digits=10, decimal_places=2)
+    cost_price = serializers.DecimalField(max_digits=10, decimal_places=2, required=True)
+    quantity = serializers.IntegerField(min_value=1, required=True)
+
+
+class SellProductUnitSerializer(serializers.Serializer):
+    product_id = serializers.IntegerField()
+    unit_type = serializers.CharField(max_length=50)  # Unit type (e.g., 'carton', 'piece', etc.)
     quantity = serializers.IntegerField(min_value=1)
+    selling_price = serializers.DecimalField(max_digits=10, decimal_places=2)
 
 
 class SellProductSerializer(serializers.Serializer):
-    selling_price = serializers.DecimalField(max_digits=10, decimal_places=2)
-    quantity = serializers.IntegerField(min_value=1)
+    products = SellProductUnitSerializer(many=True)
+
+
+class SalesRecordSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='product.product_name', read_only=True)
+
+    class Meta:
+        model = SalesRecord
+        fields = ['product_name', 'unit_type', 'quantity', 'revenue', 'cost', 'profit', 'sale_date']
 
 
 class RetrieveProductBatchesSerializer(serializers.ModelSerializer):
@@ -28,7 +43,7 @@ class RetrieveProductBatchesSerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     unit_measurements  = UnitMeasurementSerializer(many=True, required=True)
-    timestamp = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
+    timestamp = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", read_only=True)
 
     class Meta:
         model = Product

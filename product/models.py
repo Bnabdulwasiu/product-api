@@ -48,3 +48,16 @@ class ProductBatch(models.Model):
 
     def __str__(self):
         return f"Batch of {self.product.product_name}: {self.quantity} units at NGN{self.cost_price}"
+    
+
+class SalesRecord(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='records')
+    unit_type = models.CharField(max_length=50)
+    quantity = models.IntegerField()
+    revenue = models.DecimalField(max_digits=10, decimal_places=2)
+    cost = models.DecimalField(max_digits=10, decimal_places=2)
+    profit = models.DecimalField(max_digits=10, decimal_places=2)
+    sale_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Sale of {self.quantity} {self.unit_type} of {self.product.product_name}"
