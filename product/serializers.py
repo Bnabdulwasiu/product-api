@@ -13,14 +13,19 @@ class AddProductQuantitySerializer(serializers.Serializer):
     quantity = serializers.IntegerField(min_value=1)
 
 
+class SellProductSerializer(serializers.Serializer):
+    selling_price = serializers.DecimalField(max_digits=10, decimal_places=2)
+    quantity = serializers.IntegerField(min_value=1)
+
+
 class RetrieveProductBatchesSerializer(serializers.ModelSerializer):
     added_on = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
-    
+
     class Meta:
         model = ProductBatch
-        fields = "__all__"
+        fields = ['product', 'quantity', 'cost_price', 'added_on']
 
-        
+
 class ProductSerializer(serializers.ModelSerializer):
     unit_measurements  = UnitMeasurementSerializer(many=True, required=True)
     timestamp = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
@@ -40,3 +45,4 @@ class ProductSerializer(serializers.ModelSerializer):
             UnitMeasurement.objects.create(product=product, **unit_data)
         
         return product
+    
