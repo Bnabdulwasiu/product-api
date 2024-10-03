@@ -5,16 +5,19 @@ class UnitMeasurementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UnitMeasurement
-        fields = ['unit_type', 'selling_price', 'quantity']
-        
+        fields = ['unit_type', 'selling_price']
 
+class AddProductQuantitySerializer(serializers.Serializer):
+    cost_price = serializers.DecimalField(max_digits=10, decimal_places=2)
+    quantity = serializers.IntegerField(min_value=1)
+        
 class ProductSerializer(serializers.ModelSerializer):
     unit_measurements  = UnitMeasurementSerializer(many=True, required=True)
     timestamp = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
 
     class Meta:
         model = Product
-        fields = ['id', 'product_name', 'total_quantity', 'cost_price', 'category', 'unit_measurements', 'timestamp']
+        fields = ['id', 'product_name', 'quantity', 'cost_price', 'category', 'timestamp', 'unit_measurements']
         read_only_fields = ['timestamp']
 
     # Create method to handle nested creation of UnitMeasurement
