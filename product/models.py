@@ -19,7 +19,7 @@ class Product(models.Model):
 
     product_name = models.CharField(max_length=250)
     # Total stock quantity
-    quantity = models.IntegerField()
+    total_quantity = models.IntegerField(default=0)
     cost_price  = models.DecimalField(max_digits=10, decimal_places=2)
     category = models.CharField(max_length=15, choices=PRODUCT_CATEGORY)
     timestamp = models.DateTimeField(auto_now_add=True)
