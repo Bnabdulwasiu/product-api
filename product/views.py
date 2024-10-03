@@ -4,8 +4,11 @@ from rest_framework import status
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from .models import Product, UnitMeasurement, ProductBatch
-from .serializers import ProductSerializer, AddProductQuantitySerializer
+from .serializers import (ProductSerializer,
+                        AddProductQuantitySerializer,
+                        RetrieveProductBatchesSerializer)
 # Create your views here.
+
 
 class ProductListCreateView(generics.ListCreateAPIView):
     serializer_class = ProductSerializer
@@ -15,6 +18,14 @@ class ProductListCreateView(generics.ListCreateAPIView):
 class ProductRetrieveView(generics.RetrieveAPIView):
     serializer_class = ProductSerializer
     queryset = Product.objects.all()
+
+
+class ProductBatchesRetrieveView(generics.ListAPIView):
+    serializer_class = RetrieveProductBatchesSerializer
+    
+    def get_queryset(self):
+        product_id = self.kwargs['pk']
+        return ProductBatch.objects.filter(product_id=product_id)
 
 
 class AddProductQuantityView(APIView):
