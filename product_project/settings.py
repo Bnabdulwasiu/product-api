@@ -23,19 +23,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-(gy0dn+b2-tzn9ds9i6uh9t$n(#ct7^zy2&q6f#s!grz!r3^&3'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['127.0.0.1', 'overloop-assesment.onrender.com']
 
-
-REST_FRAMEWORK = {
-    # 'DEFAULT_AUTHENTICATION_CLASSES': (
-    #     'rest_framework.authentication.TokenAuthentication',  # If you're using token-based auth
-    # ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.AllowAny',  # Allow any user access
-    ),
-}
 
 # Application definition
 
@@ -65,9 +56,14 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'product_project.urls'
 
-# REST_FRAMEWORK = {
-#     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-# }
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',  # If you're using token-based auth
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.AllowAny',  # Allow any user access
+    ),
+}
 
 
 TEMPLATES = [
