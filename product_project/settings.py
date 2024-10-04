@@ -28,6 +28,15 @@ DEBUG = True
 ALLOWED_HOSTS = ['127.0.0.1', 'overloop-assesment.onrender.com']
 
 
+REST_FRAMEWORK = {
+    # 'DEFAULT_AUTHENTICATION_CLASSES': (
+    #     'rest_framework.authentication.TokenAuthentication',  # If you're using token-based auth
+    # ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.AllowAny',  # Allow any user access
+    ),
+}
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -56,9 +65,9 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'product_project.urls'
 
-REST_FRAMEWORK = {
-    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-}
+# REST_FRAMEWORK = {
+#     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+# }
 
 
 TEMPLATES = [
