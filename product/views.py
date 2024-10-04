@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404
 from django.db import transaction
 from .models import Product, ProductBatch, SalesRecord
 from decimal import Decimal
+from drf_yasg.utils import swagger_auto_schema
 from .serializers import (ProductSerializer,
                         AddProductQuantitySerializer,
                         RetrieveProductBatchesSerializer,
@@ -43,6 +44,11 @@ class AddProductQuantityView(APIView):
     """
     View to handle adding a new batch for existing product stock.
     """
+    @swagger_auto_schema(
+        request_body=AddProductQuantitySerializer,
+        responses={201: 'Created', 400: 'Bad Request'},
+        operation_description="Add quantity to an existing product. Requires `cost_price` and `quantity`."
+    )
 
     def post(self, request, product_id):
         product = get_object_or_404(Product, pk=product_id)
@@ -69,6 +75,15 @@ class AddProductQuantityView(APIView):
 
 
 class SellProductView(APIView):
+    """
+    View to handle selling multiple products in one transaction.
+    """
+
+    @swagger_auto_schema(
+        request_body=SellProductSerializer,
+        responses={200: 'Success', 400: 'Bad Request'},
+        operation_description="Sell multiple products in one transaction. Requires a list of `product_id`, `unit_type`, `quantity`, and `selling_price`."
+    )
     def post(self, request):
         serializer = SellProductSerializer(data=request.data)
 
