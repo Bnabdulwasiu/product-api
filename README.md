@@ -36,6 +36,10 @@ A product inventory management system that allows users to create products, trac
 Provided in this URL is the link to the live documentation of the project:
 <a href="https://overloop-assesment.onrender.com/api/redoc/">Click here!</a>
 
+## FIFO Profit Calculation:
+
+The system tracks multiple cost prices for each product batch added. When selling, it follows the FIFO (First In, First Out) method/algorithm to calculate the profit. For example, if you have two batches of a product with different costs, it will sell from the earliest batch first.
+
 ## Technologies Used:
 <ul>
  <li>Python 3: Backend Logic</li>
