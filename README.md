@@ -24,8 +24,8 @@ A product inventory management system that allows users to create products, trac
    pip install -r requirements.txt
 
 4. Run migrations:
-  ```bash
-  python manage.py migrate
+   ```bash
+   python manage.py migrate
 
 5. Start the development server:
   ```bash
