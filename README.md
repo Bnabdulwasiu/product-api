@@ -28,8 +28,22 @@ A product inventory management system that allows users to create products, trac
    python manage.py migrate
 
 5. Start the development server:
-  ```bash
-  python manage.py runserver
+   ```bash
+   python manage.py runserver
 
 ## Usage:
 
+Provided in this URL is the link to the live documentation of the project:
+<a href="https://overloop-assesment.onrender.com/api/redoc/">Click here!</a>
+
+## Technologies Used:
+<ul>
+ <li>Python 3: Backend Logic</li>
+ <li>Django: Web framework for building API endpoints</li>
+<li>Django REST framework: API creation and management</li>
+<li>SQLite/PostgreSQL: Database for storing products and sales</li>
+<li>Render: Deployment using gunicorn</li>
+</ul>
+
+## Contributing
+ Feel free to open an issue or submit a pull request if you would like to contribute to this project.
