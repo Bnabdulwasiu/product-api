@@ -47,7 +47,8 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'product_name', 'total_quantity', 'cost_price', 'category', 'timestamp', 'unit_measurements']
+        fields = ['id', 'product_name', 'total_quantity',
+                'cost_price', 'category', 'timestamp', 'unit_measurements']
         read_only_fields = ['timestamp', 'total_quantity']
 
     # Create method to handle nested creation of UnitMeasurement
@@ -60,4 +61,3 @@ class ProductSerializer(serializers.ModelSerializer):
             UnitMeasurement.objects.create(product=product, **unit_data)
         
         return product
-    

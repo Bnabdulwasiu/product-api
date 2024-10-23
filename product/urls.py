@@ -25,7 +25,7 @@ urlpatterns = [
     path('products/<int:product_id>/add-quantity/', views.AddProductQuantityView.as_view(), name='add-product-quantity'),
     path('products/<int:pk>/product-batches/', views.ProductBatchesRetrieveView.as_view(), name='add-product-quantity'),
     path('products/sell/', views.SellProductView.as_view(), name='sell-product'),
-    path("sales-history/", views.SalesHistoryView.as_view(), name='sales-history'),
+    path('sales-history/', views.SalesHistoryView.as_view(), name='sales-history'),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]
